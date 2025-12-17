@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:00.650** total execution time for 3 files **from auto_examples**:
+**00:00.669** total execution time for 3 files **from auto_examples**:
 
 .. container::
 
@@ -33,10 +33,10 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_plot_k_sensitivity.py` (``plot_k_sensitivity.py``)
-     - 00:00.464
+     - 00:00.477
      - 0.0
    * - :ref:`sphx_glr_auto_examples_plot_basic_clustering.py` (``plot_basic_clustering.py``)
-     - 00:00.186
+     - 00:00.192
      - 0.0
    * - :ref:`sphx_glr_auto_examples_custom_reducer.py` (``custom_reducer.py``)
      - 00:00.000
