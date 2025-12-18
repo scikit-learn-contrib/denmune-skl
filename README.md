@@ -4,11 +4,11 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
 <!-- github actions -->
-[![Unit Tests](https://github.com/shivvor2/denmune_skl/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/shivvor2/denmune_skl/actions/workflows/python-app.yml)
-[![codecov](https://codecov.io/gh/shivvor2/denmune_skl/branch/main/graph/badge.svg?token=0DQNXM34P2)](https://codecov.io/gh/shivvor2/denmune_skl)
-[![CodeQL Advanced](https://github.com/shivvor2/denmune_skl/actions/workflows/codeql.yml/badge.svg)](https://github.com/shivvor2/denmune_skl/actions/workflows/codeql.yml)
-[![Documentation](https://github.com/shivvor2/denmune_skl/actions/workflows/deploy-gh-pages.yml/badge.svg)](https://github.com/shivvor2/denmune_skl/actions/workflows/deploy-gh-pages.yml)
-[![Dependabot Updates](https://github.com/shivvor2/denmune_skl/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/shivvor2/denmune_skl/actions/workflows/dependabot/dependabot-updates)
+[![Unit Tests](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/python-app.yml)
+[![codecov](https://codecov.io/gh/scikit-learn-contrib/denmune-clustering-algorithm/branch/main/graph/badge.svg?token=0DQNXM34P2)](https://codecov.io/gh/scikit-learn-contrib/denmune-clustering-algorithm)
+[![CodeQL Advanced](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/codeql.yml/badge.svg)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/codeql.yml)
+[![Documentation](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/deploy-gh-pages.yml/badge.svg)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/deploy-gh-pages.yml)
+[![Dependabot Updates](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/dependabot/dependabot-updates)
 <!-- Package version, need to upload to pypi later -->
 [![PyPI version](https://badge.fury.io/py/denmune-skl.svg?icon=si%3Apython)](https://badge.fury.io/py/denmune-skl)
 
@@ -16,7 +16,7 @@
 
 An efficient, scikit-learn compatible implementation of the "DENMUNE: Density peak based clustering using mutual nearest neighbors" algorithm.
 
-**Disclaimer:** This project is a clean-room rewrite of the DenMune algorithm. It is not derived from the original authors' code and makes significant implementation choices to improve performance and scikit-learn compatibility. It is not a strictly faithful reproduction of the paper's original pseudocode but adheres to its core principles.
+**Disclaimer:** This project is a clean-room rewrite of the DenMune algorithm. It is not derived from the [original authors' code](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm) and makes significant implementation choices to improve performance and scikit-learn compatibility. It is not a strictly faithful reproduction of the paper's original pseudocode but adheres to its core principles.
 
 ---
 

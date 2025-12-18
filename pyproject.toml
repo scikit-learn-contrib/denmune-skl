@@ -34,10 +34,10 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/shivvor2/denmune-skl"
-"Bug Tracker" = "https://github.com/shivvor2/denmune-skl/issues"
-"Documentation" = "https://shivvor2.github.io/denmune-skl/"
-"Source Code" = "https://github.com/shivvor2/denmune-skl"
+"Homepage" = "https://github.com/scikit-learn-contrib/denmune-skl"
+"Bug Tracker" = "https://github.com/scikit-learn-contrib/denmune-skl/issues"
+"Documentation" = "https://contrib.scikit-learn.org/denmune-skl/"
+"Source Code" = "https://github.com/scikit-learn-contrib/denmune-skl"
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -25,7 +25,7 @@ To install the latest development version, clone the repository and install it l
 
 .. prompt:: bash
 
-   git clone https://github.com/shivvor2/denmune-skl.git
+   git clone https://github.com/scikit-learn-contrib/denmune-skl.git
    cd denmune-skl
    pip install .
 

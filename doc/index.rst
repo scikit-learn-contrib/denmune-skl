@@ -9,8 +9,8 @@ DenMune-Sklearn: Robust Density-Based Clustering
 **Date**: |today| **Version**: |version|
 
 **Useful links**:
-`Source Repository <https://github.com/shivvor2/denmune-skl>`__ |
-`Issues & Ideas <https://github.com/shivvor2/denmune-skl/issues>`__
+`Source Repository <https://github.com/scikit-learn-contrib/denmune-skl>`__ |
+`Issues & Ideas <https://github.com/scikit-learn-contrib/denmune-skl/issues>`__
 
 **DenMune-Sklearn** is an efficient, scikit-learn compatible implementation of the "DENMUNE: Density peak based clustering using mutual nearest neighbors" algorithm. It was developed to provide a robust, performant, and API-compliant alternative to existing implementations.
 
