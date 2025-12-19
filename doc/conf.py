@@ -58,7 +58,7 @@ html_sidebars = {
 
 html_theme_options = {
     "external_links": [],
-    "github_url": "https:////github.com/shivvor2/denmune-skl",
+    "github_url": "https:////github.com/scikit-learn-contrib/denmune-skl",
     # "twitter_url": "https://twitter.com/pandas_dev",
     "use_edit_page_button": True,
     "show_toc_level": 1,
@@ -66,7 +66,7 @@ html_theme_options = {
 }
 
 html_context = {
-    "github_user": "shivvor2",
+    "github_user": "scikit-learn-contrib",
     "github_repo": "denmune-skl",
     "github_version": "master",
     "doc_path": "doc",
@@ -93,9 +93,9 @@ numpydoc_show_class_members = False
 intersphinx_mapping = {
     "python": ("https://docs.python.org/{.major}".format(sys.version_info), None),
     "numpy": ("https://numpy.org/doc/stable", None),
-    "scipy": ("https://docs.scipy.org/doc/scipy/reference", None),
+    "scipy": ("https://docs.scipy.org/doc/scipy", None),
     "scikit-learn": ("https://scikit-learn.org/stable", None),
-    "matplotlib": ("https://matplotlib.org/", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable/", None),
     "joblib": ("https://joblib.readthedocs.io/en/latest/", None),
 }
