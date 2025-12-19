@@ -1,6 +1,0 @@
-﻿denmune\_skl.utils.discovery.all\_displays
-==========================================
-
-.. currentmodule:: denmune_skl.utils.discovery
-
-.. autofunction:: all_displays
