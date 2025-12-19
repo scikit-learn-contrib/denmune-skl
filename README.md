@@ -4,11 +4,11 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
 <!-- github actions -->
-[![Unit Tests](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/python-app.yml)
-[![codecov](https://codecov.io/gh/scikit-learn-contrib/denmune-clustering-algorithm/branch/main/graph/badge.svg?token=0DQNXM34P2)](https://codecov.io/gh/scikit-learn-contrib/denmune-clustering-algorithm)
-[![CodeQL Advanced](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/codeql.yml/badge.svg)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/codeql.yml)
-[![Documentation](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/deploy-gh-pages.yml/badge.svg)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/deploy-gh-pages.yml)
-[![Dependabot Updates](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/scikit-learn-contrib/denmune-clustering-algorithm/actions/workflows/dependabot/dependabot-updates)
+[![Unit Tests](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/python-app.yml)
+[![codecov](https://codecov.io/gh/scikit-learn-contrib/denmune-skl/branch/main/graph/badge.svg?token=0DQNXM34P2)](https://codecov.io/gh/scikit-learn-contrib/denmune-skl)
+[![CodeQL Advanced](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/codeql.yml/badge.svg)](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/codeql.yml)
+[![Documentation](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/deploy-gh-pages.yml/badge.svg)](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/deploy-gh-pages.yml)
+[![Dependabot Updates](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/scikit-learn-contrib/denmune-skl/actions/workflows/dependabot/dependabot-updates)
 <!-- Package version, need to upload to pypi later -->
 [![PyPI version](https://badge.fury.io/py/denmune-skl.svg?icon=si%3Apython)](https://badge.fury.io/py/denmune-skl)
 

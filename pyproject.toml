@@ -97,11 +97,15 @@ umap-learn = "*"
 build-doc = { cmd = "make html", cwd = "doc" }
 clean-doc = { cmd = "rm -rf _build", cwd = "doc" }
 
+[tool.pixi.feature.build.pypi-dependencies]
+build = "*"
+twine = "*"
+
 [tool.pixi.environments]
 doc = ["doc"]
 lint = ["lint"]
 test = ["test"]
-dev = ["doc", "lint", "test"]
+dev = ["doc", "lint", "test", "build"]
 
 [tool.pixi.target.osx-arm64.dependencies]
 libgfortran = ">=5.0.0" # For Apple Silicon
