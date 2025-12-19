@@ -10,6 +10,9 @@ __pycache__/
 test_logs/
 *_log.txt
 
+# Linter Cache
+.ruff_cache
+
 # scikit-learn specific
 doc/_build/
 doc/auto_examples/

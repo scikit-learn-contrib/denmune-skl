@@ -91,6 +91,7 @@ sphinx-prompt = "*"
 
 [tool.pixi.feature.doc.pypi-dependencies]
 denmune-skl = { path = "." }
+umap-learn = "*"
 
 [tool.pixi.feature.doc.tasks]
 build-doc = { cmd = "make html", cwd = "doc" }
