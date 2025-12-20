@@ -90,7 +90,7 @@ sphinx-gallery = "*"
 sphinx-prompt = "*"
 
 [tool.pixi.feature.doc.pypi-dependencies]
-denmune-skl = { path = "." }
+denmune-skl = { path = ".", editable = true }
 umap-learn = "*"
 
 [tool.pixi.feature.doc.tasks]
