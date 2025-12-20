@@ -74,10 +74,10 @@ pytest = "*"
 pytest-cov = "*"
 
 [tool.pixi.feature.test.pypi-dependencies]
-denmune-skl = { path = "." }
+denmune-skl = { path = ".", editable = true }
 
 [tool.pixi.feature.test.tasks]
-test = { cmd = "pytest -vsl --cov=denmune_skl --cov-report=xml" }
+test = { cmd = "pytest -vsl --cov=denmune_skl --cov-report=xml"}
 
 [tool.pixi.feature.doc.dependencies]
 matplotlib = "*"
@@ -90,7 +90,7 @@ sphinx-gallery = "*"
 sphinx-prompt = "*"
 
 [tool.pixi.feature.doc.pypi-dependencies]
-denmune-skl = { path = "." }
+denmune-skl = { path = ".", editable = true }
 umap-learn = "*"
 
 [tool.pixi.feature.doc.tasks]
@@ -109,11 +109,9 @@ dev = ["doc", "lint", "test", "build"]
 
 [tool.pixi.target.osx-arm64.dependencies]
 libgfortran = ">=5.0.0" # For Apple Silicon
-libgfortran5 = "*"      # For Intel Macs
 
 [tool.pixi.target.osx-64.dependencies]
 libgfortran = ">=5.0.0" # For Apple Silicon
-libgfortran5 = "*"      # For Intel Macs
 
 [tool.black]
 line-length = 88
