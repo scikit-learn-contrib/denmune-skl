@@ -2642,8 +2642,8 @@ packages:
   timestamp: 1747855126005
 - pypi: ./
   name: denmune-skl
-  version: 0.1.4.dev0+g1e5a6f8c9.d20251219
-  sha256: 6ae26402cefb6aed7dbb1cb94e1ee3b96f1e681c09b91db98f6635a770a46d24
+  version: 0.1.4.dev1+g9523a7f4d.d20251220
+  sha256: 403ac70b10690d95148a33b703aae7c0513dfa46121040a0d3cf2e736121e834
   requires_dist:
   - numpy
   - scipy
