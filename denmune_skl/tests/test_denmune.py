@@ -39,6 +39,18 @@ def blob_data():
 
 
 @pytest.fixture
+def high_dim_blob_data():
+    """
+    Fixture for blob data with enough dimensions to trigger dimensionality reduction.
+    n_features (5) > target_dims (2).
+    """
+    X, y = make_blobs(
+        n_samples=150, n_features=5, centers=3, cluster_std=0.8, random_state=42
+    )
+    return X, y
+
+
+@pytest.fixture
 def moon_data():
     """Fixture for non-convex moon-shaped data."""
     X, y = make_moons(n_samples=200, noise=0.05, random_state=42)
@@ -184,22 +196,26 @@ def test_precomputed_metric_handling(blob_data):
     assert model_pass.n_clusters_ == 3
 
 
-def test_sparse_input_handling(blob_data):
+def test_sparse_input_handling(high_dim_blob_data):
     """
     Test logic for sparse matrix input.
     - It MUST raise an error if reduce_dims=True with a non-sparse reducer (TSNE).
     - It SHOULD WORK if reduce_dims=True with a sparse-compatible reducer.
     - It SHOULD WORK if reduce_dims=False.
     """
-    X, y = blob_data
+    X, y = high_dim_blob_data
     X_sparse = csr_matrix(X)
 
-    # 1. Reduce_dims=True with the default "tsne" reducer. Should raise warning.
+    # 1. Reduce_dims=True with the default "tsne" reducer.
+    # Since n_features (5) > target_dims (2), reduction is attempted.
+    # Since TSNE doesn't support sparse, it MUST warn.
     model_warn = DenMune(reduce_dims=True, dim_reducer="tsne")
     warn_msg = "does not support sparse input"
+
     with pytest.warns(UserWarning, match=warn_msg):
         model_warn.fit(X_sparse)
-    # Check that it proceeded and produced labels
+
+    # Check that it proceeded (fallback to original data) and produced labels
     assert hasattr(model_warn, "labels_")
 
     # 2. Valid case: reduce_dims=False. SHOULD PASS.
@@ -208,6 +224,7 @@ def test_sparse_input_handling(blob_data):
         labels = model_pass_no_reduce.fit_predict(X_sparse)
     except Exception as e:
         pytest.fail(f"DenMune with sparse input and reduce_dims=False failed: {e}")
+
     # We still expect a good result
     assert adjusted_rand_score(y, labels) >= 0.95
 
@@ -219,7 +236,7 @@ def test_sparse_input_handling(blob_data):
         model_pass_reduce.fit(X_sparse)
     except Exception as e:
         pytest.fail(
-            "DenMune with sparse input and a sparse-compatible reducer failed: " f"{e}"
+            f"DenMune with sparse input and a sparse-compatible reducer failed: {e}"
         )
     # Check that the reducer was indeed used
     assert isinstance(model_pass_reduce.reducer_, MockSparseReducer)

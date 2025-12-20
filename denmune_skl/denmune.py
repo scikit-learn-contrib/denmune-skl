@@ -161,222 +161,33 @@ class DenMune(ClusterMixin, BaseEstimator):
     def fit(self, X, y=None):
         """
         Perform DenMune clustering.
-
-        Parameters
-        ----------
-        X : array-like of shape (n_samples, n_features_in)
-            Training instances to cluster.
-
-        y : Ignored
-            Not used, present here for API consistency by convention.
-
-        Returns
-        -------
-        self
-            Fitted estimator.
         """
-
         # 1. Input validation
         X = validate_data(self, X=X, accept_sparse=True, dtype=[np.float64, np.float32])
-
         self.n_samples_ = X.shape[0]
 
         if self.n_samples_ <= 1:
-            # No reason to cluster no points or a single point
             raise ValueError(f"n_samples={self.n_samples_} should be > 1.")
 
-        # 2. Dim reduction (if enabled)
-        self.reducer_ = None
+        # 2. Dimensionality Reduction
+        # Extracted: Complex config logic and warnings are now hidden
+        self.projected_X_ = self._setup_and_apply_reducer(X)
 
-        if self.reduce_dims:
-            if self.metric == "precomputed":
-                raise ValueError(
-                    "metric='precomputed' is not supported when reduce_dims=True"
-                )
-
-            reducer_params = {
-                "n_jobs": self.n_jobs,
-            }
-
-            if hasattr(self.dim_reducer, "n_components") or self.dim_reducer in [
-                "tsne",
-                "pca",
-            ]:
-                reducer_params["n_components"] = self.target_dims
-
-            # Special case for TSNE
-            if isinstance(self.dim_reducer, str) and self.dim_reducer == "tsne":
-                # Default perplexity is 30. It must be < n_samples.
-                if self.target_dims > 3:
-                    reducer_params["method"] = "exact"
-                if self.n_samples_ <= 30:
-                    reducer_params["perplexity"] = max(
-                        1,
-                        min(30, self.n_samples_ - 1),
-                    )
-
-            self.reducer_ = self._get_component(
-                self.dim_reducer,
-                REDUCER_CLASS_MAP,
-                self.random_state,
-                **reducer_params,
-            )
-            # Check Sparse compatibility
-            if issparse(X) and not get_tags(self.reducer_).input_tags.sparse:
-                reducer_input_tags = get_tags(self.reducer_).input_tags
-                if not reducer_input_tags.sparse:
-                    warnings.warn(
-                        f"The selected dimensionality reducer "
-                        f"({self.reducer_.__class__.__name__}) does not support sparse "
-                        f"input. Skipping dimensionality reduction and proceeding with "
-                        f"the original sparse data.",
-                        UserWarning,
-                        stacklevel=2,
-                    )
-            # Here metric != "precomputed" always
-            elif self.n_features_in_ <= self.target_dims:
-                warnings.warn(
-                    f"Skipping dimensionality reduction: n_features_in_ "
-                    f"({self.n_features_in_}) is not greater than target_dims "
-                    f"({self.target_dims}).",
-                    UserWarning,
-                    stacklevel=2,
-                )
-            else:
-                X = self.reducer_.fit_transform(X)
-
-        self.projected_X_ = X
-
-        # 3. Nearest Neighbor Search
-        self.nn_ = NearestNeighbors(
-            n_neighbors=self.k_nearest,
-            metric=self.metric,
-            metric_params=self.metric_params,
-            n_jobs=self.n_jobs,
+        # 3. KNN and Mutual Graph Construction
+        mutual_graph, in_degree, mutual_neighbors = self._derive_mutual_knn_features(
+            self.projected_X_
         )
-        self.nn_.fit(X)
-        adj_matrix = self.nn_.kneighbors_graph(X, mode="connectivity")
 
-        # Mutual graph is the intersection of the graph and its transpose
-        mutual_graph = adj_matrix.multiply(adj_matrix.T)
-
-        # 4. Point Classification and Canonical Ordering (Unchanged)
-        in_degree = np.array(adj_matrix.sum(axis=0)).flatten()
+        # Store density scores (canonical ordering)
         self.density_scores_ = in_degree
-        sorted_indices = np.argsort(in_degree)[::-1]
 
-        # Get mutual neighbors for each point efficiently
-        mutual_neighbors = mutual_graph.tolil().rows
-
-        # 5. CreateClustersSkeleton (Phase I - Algorithm 2)
-        # This phase builds the initial cluster backbones from strong points.
-
-        # State-tracking arrays
-        labels = np.full(self.n_samples_, -1, dtype=np.intp)
-        cluster_parent = np.arange(self.n_samples_, dtype=np.intp)
-
-        strong_point_mask = in_degree >= self.k_nearest
-        self.core_sample_indices_ = np.where(strong_point_mask)[0]
-
-        # Process strong points in canonical order to form cluster skeletons
-        for i in sorted_indices:
-            if not strong_point_mask[i]:
-                continue
-
-            # This point is a strong point. Mark it as initially belonging to its own
-            # cluster.
-            labels[i] = i
-
-            # Per Algorithm 2, the candidate set C is the point plus its MNNs.
-            # Check which existing clusters this set intersects with.
-            candidate_set_indices = mutual_neighbors[i]
-
-            # Find which of these MNNs have already been processed and assigned a
-            # cluster.
-            # These neighbors form the bridge to other clusters.
-            classified_neighbors = [n for n in candidate_set_indices if labels[n] != -1]
-
-            if not classified_neighbors:
-                # This strong point doesn't connect to any existing cluster skeleton.
-                # Keep it as a new, independent cluster for now.
-                continue
-
-            # MERGE LOGIC
-            # Find the root clusters of all neighbors it connects to.
-            neighbor_roots = {
-                DenMune._find_root(labels[n], cluster_parent)
-                for n in classified_neighbors
-            }
-
-            # Merge current point's cluster with ALL clusters it intersects.
-            root_of_i = DenMune._find_root(i, cluster_parent)
-            for root in neighbor_roots:
-                DenMune._union(root_of_i, root, cluster_parent)
-
-        # 6. AssignWeakPoints (Phase II - Algorithm 3)
-        # This phase attaches weak points to the established skeletons.
-
-        # Iteratively attach weak points until no more changes occur.
-        while True:
-            newly_assigned_count = 0
-            unclassified_indices = np.where(labels == -1)[0]
-            if len(unclassified_indices) == 0:
-                break
-
-            for i in unclassified_indices:
-                mnn_of_i = mutual_neighbors[i]
-                if not mnn_of_i:
-                    continue
-
-                classified_mnn = [n for n in mnn_of_i if labels[n] != -1]
-                if not classified_mnn:
-                    continue
-
-                # Count occurrences of roots among neighbors.
-                # This is equivalent to the simplified `|MNN_q_i INTERSECT C_j|` rule.
-                neighbor_roots = [
-                    DenMune._find_root(labels[n], cluster_parent)
-                    for n in classified_mnn
-                ]
-
-                if not neighbor_roots:
-                    continue
-
-                unique_roots, counts = np.unique(neighbor_roots, return_counts=True)
-
-                # Find the root with the maximum count (max intersection).
-                # `np.argmax` handles ties deterministically by taking first occurrence.
-                best_cluster_root = unique_roots[np.argmax(counts)]
-
-                labels[i] = best_cluster_root
-                newly_assigned_count += 1
-
-            if newly_assigned_count == 0:
-                break
-
-        # 7. Setting self.labels_
-        final_labels = np.full(self.n_samples_, -1, dtype=np.intp)
-        classified_mask = labels != -1
-        final_labels[classified_mask] = [
-            DenMune._find_root(lable, cluster_parent)
-            for lable in labels[classified_mask]
-        ]
-
-        # Remap the arbitrary root labels (e.g., 27, 1053, 4000) to a clean
-        # 0, 1, 2... sequence
-        unique_final_labels = np.unique(final_labels[final_labels != -1])
-        self.n_clusters_ = len(unique_final_labels)
-
-        label_map = {
-            old_label: new_label
-            for new_label, old_label in enumerate(unique_final_labels)
-        }
-
-        # Apply the mapping. Noise points (-1) are unaffected.
-        self.labels_ = np.array(
-            [label_map.get(lable, -1) for lable in final_labels], dtype=np.intp
+        # 4. Core Clustering Logic
+        raw_labels = self._denmune_clustering(
+            in_degree, mutual_neighbors, self.n_samples_
         )
-        self.core_sample_indices_ = np.array(self.core_sample_indices_, dtype=np.intp)
+
+        # 5. Label Normalization
+        self.labels_, self.n_clusters_ = self._normalize_labels(raw_labels)
 
         return self
 
@@ -401,6 +212,220 @@ class DenMune(ClusterMixin, BaseEstimator):
             Index of the cluster each sample belongs to.
         """
         return self.fit(X, y).labels_
+
+    def _setup_and_apply_reducer(self, X):
+        """Handles dimensionality reduction logic and warnings."""
+        self.reducer_ = None
+
+        if not self.reduce_dims:
+            return X
+
+        if self.metric == "precomputed":
+            raise ValueError(
+                "metric='precomputed' is not supported when reduce_dims=True"
+            )
+
+        # Check if reduction is necessary
+        if self.n_features_in_ <= self.target_dims:
+            warnings.warn(
+                f"Skipping dimensionality reduction: n_features_in_ "
+                f"({self.n_features_in_}) is not greater than target_dims "
+                f"({self.target_dims}).",
+                UserWarning,
+                stacklevel=2,
+            )
+            return X
+
+        reducer_params = {"n_jobs": self.n_jobs}
+
+        # Handle specific reducer logic
+        if hasattr(self.dim_reducer, "n_components") or self.dim_reducer in [
+            "tsne",
+            "pca",
+        ]:
+            reducer_params["n_components"] = self.target_dims
+
+        if isinstance(self.dim_reducer, str) and self.dim_reducer == "tsne":
+            if self.target_dims > 3:
+                reducer_params["method"] = "exact"
+            if self.n_samples_ <= 30:
+                reducer_params["perplexity"] = max(1, min(30, self.n_samples_ - 1))
+
+        self.reducer_ = self._get_component(
+            self.dim_reducer, REDUCER_CLASS_MAP, self.random_state, **reducer_params
+        )
+
+        # Check Sparse compatibility
+        if issparse(X) and not get_tags(self.reducer_).input_tags.sparse:
+            warnings.warn(
+                f"The selected dimensionality reducer ({self.reducer_.__class__.__name__}) "
+                f"does not support sparse input. Skipping dimensionality reduction.",
+                UserWarning,
+                stacklevel=2,
+            )
+            return X
+
+        return self.reducer_.fit_transform(X)
+
+    def _derive_mutual_knn_features(self, X):
+        """Computes KNN and Mutual KNN graphs."""
+        self.nn_ = NearestNeighbors(
+            n_neighbors=self.k_nearest,
+            metric=self.metric,
+            metric_params=self.metric_params,
+            n_jobs=self.n_jobs,
+        )
+        self.nn_.fit(X)
+        adj_matrix = self.nn_.kneighbors_graph(X, mode="connectivity")
+
+        # Mutual graph is the intersection of the graph and its transpose
+        mutual_graph = adj_matrix.multiply(adj_matrix.T)
+
+        # Point Classification and Canonical Ordering
+        in_degree = np.array(adj_matrix.sum(axis=0)).flatten()
+        mutual_neighbors = mutual_graph.tolil().rows
+
+        return mutual_graph, in_degree, mutual_neighbors
+
+    def _denmune_clustering(self, in_degree, mutual_neighbors, n_samples):
+        """
+        Initialize state and running Algorithm II and III (from paper) sequentially.
+        """
+        # 1. Initialize Shared State
+        # labels: -1 for unassigned, otherwise points to self (root) or representative
+        labels = np.full(n_samples, -1, dtype=np.intp)
+        cluster_parent = np.arange(n_samples, dtype=np.intp)
+
+        # Identify Core Points (Strong Points)
+        strong_point_mask = in_degree >= self.k_nearest
+        self.core_sample_indices_ = np.where(strong_point_mask)[0]
+
+        # Sort by density (Canonical Ordering)
+        sorted_indices = np.argsort(in_degree)[::-1]
+
+        # 2. Algorithm II: `CreateClustersSkeleton``
+        self._create_clusters_skeleton(
+            sorted_indices, strong_point_mask, mutual_neighbors, labels, cluster_parent
+        )
+
+        # 3. Algorithm III: `AssignWeakPoints`
+        self._assign_weak_points(mutual_neighbors, labels, cluster_parent)
+
+        # 4. Flatten Union-Find to final representatives
+        return self._flatten_union_find(labels, cluster_parent, n_samples)
+
+    def _create_clusters_skeleton(
+        self,
+        sorted_indices,
+        strong_point_mask,
+        mutual_neighbors,
+        labels,
+        cluster_parent,
+    ):
+        """
+        Algorithm II: Builds the initial cluster backbones using strong points.
+        Modifies labels and cluster_parent in-place.
+        """
+        for i in sorted_indices:
+            if not strong_point_mask[i]:
+                continue
+
+            labels[i] = i  # Mark as visited/core
+
+            # Find neighbors that are already part of a cluster
+            candidate_set_indices = mutual_neighbors[i]
+            # Optimization: Check if list is empty before list comp
+            if not candidate_set_indices:
+                continue
+
+            classified_neighbors = [n for n in candidate_set_indices if labels[n] != -1]
+
+            if not classified_neighbors:
+                continue
+
+            # Merge current point's cluster with ALL intersecting clusters
+            neighbor_roots = {
+                DenMune._find_root(labels[n], cluster_parent)
+                for n in classified_neighbors
+            }
+
+            root_of_i = DenMune._find_root(i, cluster_parent)
+            for root in neighbor_roots:
+                DenMune._union(root_of_i, root, cluster_parent)
+
+    def _assign_weak_points(self, mutual_neighbors, labels, cluster_parent):
+        """
+        Algorithm III: Iteratively attaches weak points to established skeletons.
+        Modifies labels in-place.
+        """
+        # We loop until convergence (no new points assigned)
+        while True:
+            newly_assigned_count = 0
+            unclassified_indices = np.where(labels == -1)[0]
+
+            if len(unclassified_indices) == 0:
+                break
+
+            for i in unclassified_indices:
+                mnn_of_i = mutual_neighbors[i]
+                if not mnn_of_i:
+                    continue
+
+                classified_mnn = [n for n in mnn_of_i if labels[n] != -1]
+                if not classified_mnn:
+                    continue
+
+                # Vote for the cluster with max intersection
+                neighbor_roots = [
+                    DenMune._find_root(labels[n], cluster_parent)
+                    for n in classified_mnn
+                ]
+
+                if not neighbor_roots:
+                    continue
+
+                # Find majority vote
+                unique_roots, counts = np.unique(neighbor_roots, return_counts=True)
+                best_cluster_root = unique_roots[np.argmax(counts)]
+
+                labels[i] = best_cluster_root
+                newly_assigned_count += 1
+
+            if newly_assigned_count == 0:
+                break
+
+    def _flatten_union_find(self, labels, cluster_parent, n_samples):
+        """
+        Resolves the Union-Find structure into a flat array of root representatives.
+        """
+        final_roots = np.full(n_samples, -1, dtype=np.intp)
+        classified_mask = labels != -1
+
+        # Path compression one last time for all classified points
+        final_roots[classified_mask] = [
+            DenMune._find_root(label, cluster_parent)
+            for label in labels[classified_mask]
+        ]
+
+        return final_roots
+
+    def _normalize_labels(self, raw_labels):
+        """Maps arbitrary root indices to contiguous cluster IDs (0, 1, 2...)."""
+        unique_roots = np.unique(raw_labels[raw_labels != -1])
+        n_clusters = len(unique_roots)
+
+        label_map = {
+            old_label: new_label for new_label, old_label in enumerate(unique_roots)
+        }
+
+        normalized_labels = np.array(
+            [label_map.get(label, -1) for label in raw_labels], dtype=np.intp
+        )
+
+        # Ensure core_sample_indices_ is correct type (it was set in _compute_clusters)
+        self.core_sample_indices_ = np.array(self.core_sample_indices_, dtype=np.intp)
+
+        return normalized_labels, n_clusters
 
     @staticmethod
     def _find_root(i, parent_array):
