@@ -359,20 +359,31 @@ class DenMune(ClusterMixin, BaseEstimator):
         Modifies labels in-place.
         """
         # We loop until convergence (no new points assigned)
-        while True:
+        unclassified_indices = np.where(labels == -1)[0]
+
+        while len(unclassified_indices) > 0:
             newly_assigned_count = 0
-            unclassified_indices = np.where(labels == -1)[0]
 
-            if len(unclassified_indices) == 0:
-                break
+            # Pre-allocate a mask for points we fail to classify this round.
+            # Default is False (don't keep), we set to True if we need to try again.
+            keep_mask = np.zeros(len(unclassified_indices), dtype=bool)
 
-            for i in unclassified_indices:
-                mnn_of_i = mutual_neighbors[i]
+            # 'idx' is the index of point within `unclassified_indices`
+            # 'sample_idx' is the index of the point within X (Original data)
+            for idx, sample_idx in enumerate(unclassified_indices):
+                mnn_of_i = mutual_neighbors[sample_idx]
+
+                # Optimization: If point has no neighbors, it is noise.
+                # Leave keep_mask[idx] as False. It will be dropped forever.
                 if not mnn_of_i:
                     continue
 
                 classified_mnn = [n for n in mnn_of_i if labels[n] != -1]
+
+                # If no neighbors are classified yet, we must keep this point for
+                # the next pass.
                 if not classified_mnn:
+                    keep_mask[idx] = True
                     continue
 
                 # Vote for the cluster with max intersection
@@ -382,17 +393,21 @@ class DenMune(ClusterMixin, BaseEstimator):
                 ]
 
                 if not neighbor_roots:
+                    keep_mask[idx] = True
                     continue
 
                 # Find majority vote
                 unique_roots, counts = np.unique(neighbor_roots, return_counts=True)
                 best_cluster_root = unique_roots[np.argmax(counts)]
 
-                labels[i] = best_cluster_root
+                labels[sample_idx] = best_cluster_root
                 newly_assigned_count += 1
 
             if newly_assigned_count == 0:
                 break
+
+            # Apply the mask to shrink the list for the next iteration.
+            unclassified_indices = unclassified_indices[keep_mask]
 
     def _flatten_union_find(self, labels, cluster_parent, n_samples):
         """
