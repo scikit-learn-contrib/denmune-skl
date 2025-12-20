@@ -258,10 +258,10 @@ class DenMune(ClusterMixin, BaseEstimator):
         # Check Sparse compatibility
         if issparse(X) and not get_tags(self.reducer_).input_tags.sparse:
             warnings.warn(
-                f"The selected dimensionality reducer ({self.reducer_.__class__.__name__}) "
-                f"does not support sparse input. Skipping dimensionality reduction.",
+                "The selected dimensionality reducer "
+                f"({self.reducer_.__class__.__name__}) "
+                "does not support sparse input. Skipping dimensionality reduction.",
                 UserWarning,
-                stacklevel=2,
             )
             return X
 
